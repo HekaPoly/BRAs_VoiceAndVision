@@ -7,9 +7,7 @@ faulthandler.enable()
 
 
 def main():
-    text = record.transcribe_directly() + " pomme "
-    print(text)
-    label = algorithm.stringtoLabel(text)
+    print("Presentation of computer vision")
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='../models/yolov8n.pt', help='model.pt path(s)') #A modifier pour changer de modele
@@ -19,7 +17,7 @@ def main():
     opt = parser.parse_args()
 
     with torch.no_grad():
-        detector.object_detection(label, 15, opt)
+        detector.object_detection(None, None, opt)
 
 if __name__ == '__main__':
     main()

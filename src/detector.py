@@ -85,7 +85,7 @@ def torch_thread(weights, img_size, conf_thres=0.2, iou_thres=0.45):
         time.sleep(0.01)
 
 
-def object_detection(label: int, duration: int, opt):
+def object_detection(label, duration, opt):
     global image_net, exit_signal, run_signal, detections
 
     capture_thread = Thread(target=torch_thread, kwargs={'weights': opt.weights, 'img_size': opt.img_size, "conf_thres": opt.conf_thres})
@@ -153,9 +153,6 @@ def object_detection(label: int, duration: int, opt):
     image_track_ocv = np.zeros((tracks_resolution.height, tracks_resolution.width, 4), np.uint8)
     # Camera pose
     cam_w_pose = sl.Pose()
-    
-    # Set-up Timer
-    timeout = time.time() + duration
 
     while viewer.is_available() and not exit_signal:
         if zed.grab(runtime_params) == sl.ERROR_CODE.SUCCESS:
@@ -180,11 +177,11 @@ def object_detection(label: int, duration: int, opt):
 
             zed.retrieve_objects(objects, obj_runtime_param)
 
-            list = [x for x in objects.object_list if (x.raw_label == label)]
+            list = [x for x in objects.object_list if (x.raw_label == label or label == None)]
             for obj in list:
                 print(str(obj.id) + ": "+ str(obj.raw_label))
 
-            rd.retrieve_data(objects.object_list)
+            #rd.retrieve_data(objects.object_list) - No output for presentation
             # -- Display
             # Retrieve display data
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA, sl.MEM.CPU, point_cloud_res)
@@ -206,8 +203,6 @@ def object_detection(label: int, duration: int, opt):
             cv2.imshow("ZED | 2D View and Birds View", global_image)
             key = cv2.waitKey(10)
             if key == 27 :
-                exit_signal = True
-            elif time.time() > timeout:
                 exit_signal = True
         else:
             exit_signal = True
