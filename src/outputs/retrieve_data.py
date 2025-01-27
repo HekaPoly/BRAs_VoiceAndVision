@@ -97,6 +97,7 @@ def get_distance(n:int):
         return None
     true_average = sum(true_z_values) / len(true_z_values)
     print("x" if n == 0 else "y" if n == 1 else "z" if n == 2 else "error")
+    print("True Average: ", true_average)
     return true_average
 
         
