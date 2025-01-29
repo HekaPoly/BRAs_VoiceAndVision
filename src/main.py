@@ -7,32 +7,10 @@ import torch
 import math
 import faulthandler
 import UART
+import robotic
 faulthandler.enable()
 
-def find_angle() -> int:
-    x = retrieve_data.get_distance(0) 
-    y = retrieve_data.get_distance(1)
-    z = retrieve_data.get_distance(2)
-    angle_rad = math.atan(x/z)
-    
-    # Convert radians to degrees
-    angle_deg = math.degrees(angle_rad)
-    print("First: ", angle_deg)
 
-    return angle_deg
-
-def find_second_angle() -> int:
-    x = retrieve_data.get_distance(0) 
-    y = retrieve_data.get_distance(1)
-    z = retrieve_data.get_distance(2)
-    dist = math.dist((x, y, z), (0, 0, 0))
-    angle_rad = math.asin(y/dist)
-    
-    # Convert radians to degrees
-    angle_deg = math.degrees(angle_rad)
-    print("Second: ", angle_deg)
-
-    return angle_deg
 
 def main():
     text = record.transcribe_directly()
@@ -53,10 +31,22 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    first_angle = find_angle()
-    second_angle = find_second_angle()
-    # UART.send_data_through_UART(-angle)
-    #UART.send_data_through_UART(input())
-    #UART.send_data_through_UART(input("2nd angle"))
-    # input("Press Enter to end the code...")
-    # UART.send_data_through_UART(0)
+
+    x = retrieve_data.get_distance(0) * 100
+    y = retrieve_data.get_distance(1) * 100
+    z = retrieve_data.get_distance(2) * 100
+
+    BASE_HEIGHT = 20.0
+    ARM_LENGTH1 = 50.0
+    ARM_LENGTH2 = 50.0
+    current_angles = (0.0, 0.0, 0.0)  # Angles initiaux (en degrés)
+    target_position = (x, y, z)
+
+    if not robotic.is_reachable(BASE_HEIGHT, ARM_LENGTH1, ARM_LENGTH2, target_position):
+        print("L'objet est hors de portée.")
+    else:
+        try:
+            theta_base, theta_arm1, theta_arm2 = robotic.calculate_angles(BASE_HEIGHT, ARM_LENGTH1, ARM_LENGTH2, target_position)
+            print(f"Angles calculés : Base = {theta_base:.2f} degrés, Bras 1 = {theta_arm1:.2f} degrés, Bras 2 = {theta_arm2:.2f} degrés")
+        except ValueError as e:
+            print(e)
