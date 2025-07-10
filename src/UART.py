@@ -6,9 +6,10 @@ from platform import platform
 from serial import Serial
 from serial.tools import list_ports
 from time import sleep
+from typing import List
 
 DEFAULT_BAUD_RATE = 115200
-VELOCITY_SHIFT = 0
+VELOCITY_SHIFT = 3
 ANGLE_SHIFT = 16
 NUMBER_OF_BYTES = 4
 UART_INIT_DELAY = 2
@@ -35,7 +36,7 @@ def get_serial_ports_list() -> list:
 
     return list_com_ports
 
-def send_data_through_UART(angle: int) -> bool:
+def send_data_through_UART(angle: int, velocity: int, n: int) -> bool:
     """
     This function takes angle as input to send it to a microcontroller through UART;
 
@@ -45,7 +46,7 @@ def send_data_through_UART(angle: int) -> bool:
     Returns:
         dataSuccessfullySent (bool): Result of data transmission (Successful or Unsuccessful).
     """
-    angle =  int((2.15*int(angle)+360) % 360 )
+    angle =  int((int(angle) + 180) % 360 )
     assert(angle >= 0 and angle <= 360)
     serial_ports = get_serial_ports_list()
     if len(serial_ports) != 1:
@@ -53,12 +54,13 @@ def send_data_through_UART(angle: int) -> bool:
     
     serial_port = serial_ports[0]
 
-    VELOCITY = 75
+    VELOCITY = velocity
     VELOCITY <<= VELOCITY_SHIFT
 
     angle <<= ANGLE_SHIFT
     data_successfully_sent = False
     data = 0x00000000
+    data += n
     data += angle
     data += VELOCITY
 
@@ -66,9 +68,6 @@ def send_data_through_UART(angle: int) -> bool:
                     port            = serial_port,
                     baudrate        = DEFAULT_BAUD_RATE,
                     timeout         = None,
-                    write_timeout   = 0,
-                    xonxoff         = False,
-                    rtscts          = False,
                     dsrdtr          = False)
     try:
         ser.isOpen()
@@ -87,6 +86,17 @@ def send_data_through_UART(angle: int) -> bool:
         print(e)
 
     if data_successfully_sent:
-        print('Data sent: 0x' + byte_data.hex())
+        print('Data sent: 0x' + byte_data.hex() )
+        print('Data sent: 0x' + str(byte_data) )
+
     
     return data_successfully_sent
+
+
+def send_data_to_all_motors(angles: List[int], velocities: List[int]):
+    isSuccess = True
+    for i in range(len(angles)):
+        print('Motor ' + str(i) + " :"  + str(angles[i])  + " degrees, "+ str(velocities[i]) + ' speed')
+
+        isSuccess = isSuccess and send_data_through_UART(angles[i], velocities[i], i)
+    return isSuccess
