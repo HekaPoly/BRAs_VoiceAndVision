@@ -9,8 +9,8 @@ id_colors = [(232, 176, 59),
              (99, 107, 252)]
 
 def render_object(object_data, is_tracking_on):
-    #TODO: add type of object_data
     """
+    #TODO: add type of object_data
     Determines whether a detected object should 
     be rendered based on the tracking state
 
@@ -50,12 +50,18 @@ def generate_color_id_u(idx):
 
 def draw_vertical_line(left_display, start_pt, end_pt, clr, thickness):
     """
-    Draws a vertical line
+    #TODO: add type left_display
+    Draws a vertical line between two points
 
     Parameters:
-    
+        left_display () : The image/frame on which to draw the line.
+        start_pt (tuple) : The starting point (x , y) of the line
+        end_pt (tuple) : The ending point (x , y) of the line.
+        clr (tuple) : The RGB color of the line 
+        thickness (int) : Thickness of the line in pixels.
         
     Returns:
+        None
 
     """
     n_steps = 7
