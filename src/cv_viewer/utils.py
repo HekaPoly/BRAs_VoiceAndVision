@@ -9,6 +9,18 @@ id_colors = [(232, 176, 59),
              (99, 107, 252)]
 
 def render_object(object_data, is_tracking_on):
+    #TODO: add type of object_data
+    """
+    Determines whether a detected object should 
+    be rendered based on the tracking state
+
+    Parameters:
+        object_data () : The detected object data.
+        is_tracking_on (bool) : Whether tracking is currently unabled.
+
+    Returns:
+        bool : True if the object should be drawn, false otherwise.
+    """
     if is_tracking_on:
         return object_data.tracking_state == sl.OBJECT_TRACKING_STATE.OK
     else:
@@ -17,6 +29,16 @@ def render_object(object_data, is_tracking_on):
 
 
 def generate_color_id_u(idx):
+    """
+    Generates an RGB color for a given object ID.
+    The function cycles through a fixed list of colors using modulo operation.
+
+    Parameters:
+        idx (int) : The ID of the object
+
+    Returns:
+        list[int] : A list of four integers representing the RGB colors.
+    """
     arr = []
     if idx < 0:
         arr = [236, 184, 36, 255]
@@ -27,6 +49,15 @@ def generate_color_id_u(idx):
 
 
 def draw_vertical_line(left_display, start_pt, end_pt, clr, thickness):
+    """
+    Draws a vertical line
+
+    Parameters:
+    
+        
+    Returns:
+
+    """
     n_steps = 7
     pt1 = [((n_steps - 1) * start_pt[0] + end_pt[0]) / n_steps
         , ((n_steps - 1) * start_pt[1] + end_pt[1]) / n_steps]
