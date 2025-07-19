@@ -17,7 +17,7 @@ def find_angle() -> int:
     
     # Convert radians to degrees
     angle_deg = math.degrees(angle_rad)
-    print("First: ", angle_deg)
+    print("First angle: ", angle_deg)
 
     return angle_deg
 
@@ -30,15 +30,15 @@ def find_second_angle() -> int:
     
     # Convert radians to degrees
     angle_deg = math.degrees(angle_rad)
-    print("Second: ", angle_deg)
+    print("Second angle: ", angle_deg)
 
     return angle_deg
 
 def main():
-    text = record.transcribe_directly()
+    text = "bouteille"
     print(text)
     label = algorithm.stringtoLabel(text)
-
+    print(label)
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='../models/yolov8n.pt', help='model.pt path(s)') #A modifier pour changer de modele
     parser.add_argument('--svo', type=str, default=None, help='optional svo file')
@@ -47,16 +47,19 @@ def main():
     opt = parser.parse_args()
 
     with torch.no_grad():
-        detector.object_detection(label, 45, opt)
+        detector.object_detection(label, 60, opt)
     
-
+    angles = (find_angle(), find_second_angle())
+    UART.send_data_through_UART(angles[0], 0)
+    UART.send_data_through_UART(angles[1], 1)
 
 if __name__ == '__main__':
-    # main()
-    first_angle = find_angle()
-    second_angle = find_second_angle()
-    # UART.send_data_through_UART(-angle)
-    #UART.send_data_through_UART(input())
-    #UART.send_data_through_UART(input("2nd angle"))
-    # input("Press Enter to end the code...")
-    # UART.send_data_through_UART(0)
+    UART.send_data_through_UART(0, 0)
+    input()
+    UART.send_data_through_UART(0, 1)
+    input()
+    UART.send_data_through_UART(0, 2)
+    input()
+    UART.send_data_through_UART(0, 3)
+    input()
+    main()
