@@ -45,7 +45,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     Returns:
         dataSuccessfullySent (bool): Result of data transmission (Successful or Unsuccessful).
     """
-    angle =  int((2.15*int(angle)+360) % 360 )
+    angle =  int(int(int(angle) % 360) / 0.225) #int((2.15*int(angle)+360) % 360 )
     assert(angle >= 0 and angle <= 360)
     serial_ports = get_serial_ports_list()
     if len(serial_ports) != 1:
@@ -60,17 +60,19 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     data_successfully_sent = False
     data = 0x00000000
     data += motorId
+    print("moteur id", bin(data))
     data += angle
+    print("angle", bin(data))
     data += VELOCITY
+    print("velocity", bin(data))
+    print(len(bin(data)[2:]))
 
     ser = Serial(
                     port            = serial_port,
                     baudrate        = DEFAULT_BAUD_RATE,
                     timeout         = None,
-                    write_timeout   = 0,
-                    xonxoff         = False,
-                    rtscts          = False,
                     dsrdtr          = False)
+    sleep(UART_INIT_DELAY)
     try:
         ser.isOpen()
     except Exception as e:
@@ -78,11 +80,13 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
         print("Unable to open serial communication port. Try selecting a different port.")
 
     byte_data = data.to_bytes(NUMBER_OF_BYTES, byteorder='little')
-
+    print(data)
+    print(byte_data)
     try:
         sleep(UART_INIT_DELAY)
         
         ser.write(byte_data)
+        ser.flush()
         data_successfully_sent = True
     except Exception as e:
         print(e)

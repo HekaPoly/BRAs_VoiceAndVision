@@ -1,7 +1,7 @@
-import record
+# import record
 import algorithm
 import outputs.retrieve_data as retrieve_data
-import detector
+# import detector
 import argparse
 import torch
 import math
@@ -56,10 +56,10 @@ def main():
 if __name__ == '__main__':
     UART.send_data_through_UART(0, 0)
     input()
-    UART.send_data_through_UART(0, 1)
+    UART.send_data_through_UART(30, 0)
     input()
-    UART.send_data_through_UART(0, 2)
+    UART.send_data_through_UART(180, 2)
     input()
     UART.send_data_through_UART(0, 3)
-    input()
-    main()
+
+
