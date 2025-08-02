@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "bras-voiceandvision"
+version = "0.1.0"
+description = ""
+authors = ["HEKA <heka.polymtl@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+numpy = "1.23.5"
+openai-whisper = "20250625"
+opencv-python = "4.10.0.84"
+PyAudio = "0.2.14"
+pyopengl = "3.1.9"
+pyserial = "3.5"
+pyzed = { path = "./wheels/pyzed-4.1-cp310-cp310-linux_aarch64.whl" }
+scipy = "1.8.0"
+torch = { path = "./wheels/torch-2.3.0-cp310-cp310-linux_aarch64.whl" }
+torchvision = { path = "./wheels/torchvision-0.18.0a0+6043bc2-cp310-cp310-linux_aarch64.whl" }
+ultralytics = "8.2.82"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
