@@ -68,6 +68,7 @@ def transcribe_directly():
 
     return str(result["text"].strip())
 
+#Transcribes only for 5 seconds after message shown
 def transcribe_for(seconds=5):
     import time
     # Create a temporary file to store the recorded audio (this will be deleted once we've finished transcription)
