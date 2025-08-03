@@ -1,80 +1,73 @@
+import multiprocessing
 import tkinter as tk
-from tkinter import Toplevel
-import threading
-import speech_to_text
+import traceback
 
-class Windows:
-    dialogue_window = None
-    dialogue_box = None
+class TextViewer:
+    def __init__(self, queue):
+        self.queue = queue
+        self.dialogue_window = tk.Tk()
+        self.dialogue_window.title("Dialogue Box")
 
-    @staticmethod
-    def open():
+        self.label = tk.Label(self.dialogue_window, text="Start Listening", font=("Helvetica", 16), height=20, width=60)
+        self.label.pack(padx=10, pady=10)
+
+        tk.Button(self.dialogue_window, text="Clear", command=self.clear).pack(side="left", padx=10)
+        self.dialogue_window.protocol("WM_DELETE_WINDOW", self.close)
+
+        # tk.Button(self.dialogue_window,text="Start Listening",command=self.open_dialogue_window).pack(side="bottom", pady=10)
+
+    def open(self):
         try:
-            if Windows.dialogue_window is not None:
-                print("[DEBUG] Window already open")
-                return
+            self.dialogue_window.after(100, self.check_queue)
+            self.dialogue_window.mainloop()
 
-            Windows.dialogue_window = tk.Tk()
-            Windows.dialogue_window.title("Dialogue Box")
-
-            Windows.dialogue_box = tk.Text(Windows.dialogue_window, height=20, width=60, wrap="word")
-            Windows.dialogue_box.pack(padx=10, pady=10)
-
-            tk.Button(Windows.dialogue_window, text="Clear", command=Windows.clear).pack(side="left", padx=10)
-            tk.Button(Windows.dialogue_window, text="Close", command=Windows.close).pack(side="right", padx=10)
-
-            tk.Button(Windows.dialogue_window,text="Start Listening",command=Windows.open_dialogue_window).pack(side="bottom", pady=10)
-
-            Windows.dialogue_window.protocol("WM_DELETE_WINDOW", Windows.close)
-            Windows.dialogue_window.mainloop()
-
-        # Aide avec le déboguage
         except Exception as e:
-            import traceback
-            print("[ERROR] Exception in Windows.open():")
+            print("[ERROR] Exception in self.open():")
             traceback.print_exc()
 
-    @staticmethod
-    def close():
-        if Windows.dialogue_window:
-            Windows.dialogue_window.destroy()
-            Windows.dialogue_window = None
-            Windows.dialogue_box = None
+    def close(self):
+        if self.dialogue_window:
+            self.dialogue_window.destroy()
+            self.dialogue_window = None
+            self.label = None
 
-    @staticmethod
-    def clear():
-        if Windows.dialogue_box:
-            Windows.dialogue_box.delete("1.0", tk.END)
+    def clear(self):
+        if self.label:
+            self.label.config(text="Start Listening")
 
-    @staticmethod
-    def display(inputs: str):
-        if Windows.dialogue_box:
-            Windows.dialogue_box.insert(tk.END, f"{inputs}\n")
-            Windows.dialogue_box.see(tk.END)
+    def update_text(self, inputs: str):
+        if self.label:
+            self.label.config(text=inputs)
 
-    @staticmethod
-    def open_dialogue_window():
-        # def listen_loop():    # Écoute infinie
-        #     while True:
-        #         try:
-        #             Windows.display("🎙️ Écoute en cours...")
-        #             text = speech_to_text.transcribe_for(5)
-        #             if text:
-        #                 Windows.display(f"🗣️ {text}")
-        #         except Exception as e:
-        #             Windows.display(f"[Erreur]: {e}")
+    def check_queue(self):
+        """Periodically checks the queue to receive text"""
+        while not self.queue.empty():
+            message = self.queue.get()
+            self.update_text(message)
+        self.dialogue_window.after(100, self.check_queue)
+        
 
-        def listen_once():     # Écoute pour 5 secondes ou plus dès que le bouton est appuyer sur le window
-            try:
-                Windows.display("🎙️ Écoute en cours...")
-                text = speech_to_text.transcribe_directly(5)
-                if text:
-                    Windows.display(f"🗣️ {text}")
-            except Exception as e:
-                Windows.display(f"[Erreur]: {e}")
+def run_text_window(queue: multiprocessing.Queue):
+    app = TextViewer(queue)
+    app.open()
 
-        threading.Thread(target=listen_once, daemon=True).start()
+def main():
+    queue = multiprocessing.Queue()
+
+    gui_process = multiprocessing.Process(target=run_text_window, args=(queue,))
+    gui_process.start()
+
+    print("Testing inputs:")
+    try:
+        while True:
+            user_input = input("> ")
+            queue.put(user_input)
+    except KeyboardInterrupt:
+        print("Closing...")
+    finally:
+        gui_process.terminate()
+        gui_process.join()
 
 if __name__ == "__main__":
     print("[DEBUG] Starting app")
-    Windows.open()
+    main()
