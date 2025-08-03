@@ -10,6 +10,7 @@ import math
 import faulthandler
 import uart
 from enum import Enum
+import interactive_window
 
 faulthandler.enable()
 
@@ -50,6 +51,9 @@ def main():
         else:
             angle = find_angle(coordinate_dict.get(label, np.empty((0, 3))))
             print("angle :", angle)
+
+    # Pas sure ou mettre la fonction pour maintenant
+    interactive_window.Windows.start_infinite_cam(label, opt)
 
 if __name__ == '__main__':
     main()
