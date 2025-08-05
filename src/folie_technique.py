@@ -81,7 +81,7 @@ class FolieTechnique:
             volume = np.linalg.norm(data)
             if volume > VOLUME_THRESHOLD:
                 print("Audio detected, starting Folie Technique...")       
-                sound_detection = True
+                has_detect = True
             sleep(0.1)
 
         stream.stop()
