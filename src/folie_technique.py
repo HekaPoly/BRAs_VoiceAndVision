@@ -11,6 +11,7 @@ from uart import send_data_through_UART
 import random
 
 class FolieTechniqueAction(enum.Enum):
+<<<<<<< HEAD
     HI = "Salut!",
     LEFT = "Tourner a gauche",
     RIGHT = "Tourner a droite",
@@ -18,6 +19,17 @@ class FolieTechniqueAction(enum.Enum):
     DANCE = "Alors on danse!",
     FIND_PERSONS = "Trouver des personnes",
     POINT_PERSON = "Pointer une personne"
+=======
+    HI = 0,
+    LEFT = 1,
+    RIGHT = 2,
+    UP = 3,
+    DANCE = 4,
+    FIND_PERSONS = 5,
+    POINT_PERSON = 6,
+    POINT_EVERYONE = 7,
+    RESET = 8
+>>>>>>> origin/feature/folie-technique-app-movement
 
 class FolieTechnique:
     def __init__(self):
@@ -26,25 +38,115 @@ class FolieTechnique:
     def find_action(self, command):
         return FolieTechniqueAction.HI
     
+<<<<<<< HEAD
     def handle_action(self, action: FolieTechniqueAction, opt):
+=======
+    def handle_action(self, action: FolieTechniqueAction):
+        def hello(repetitions=3):
+            for _ in range(repetitions):
+                send_data_through_UART(180, 1)
+                sleep(0.3)
+                send_data_through_UART(150, 1)
+                sleep(0.3)
+        
+>>>>>>> origin/feature/folie-technique-app-movement
         if action == FolieTechniqueAction.HI:
-            pass
+            hello(3)
         elif action == FolieTechniqueAction.LEFT:
-            pass
+            send_data_through_UART(315, 0)
+            sleep(2)
         elif action == FolieTechniqueAction.RIGHT:
-            pass
+            send_data_through_UART(45, 0)
+            sleep(2)
         elif action == FolieTechniqueAction.UP:
-            pass
+            send_data_through_UART(180, 1)
+            sleep(2)
         elif action == FolieTechniqueAction.DANCE:
-            pass
+            def hello_dance():
+                send_data_through_UART(300, 0)
+                sleep(1)
+                hello(2)
+                send_data_through_UART(60, 0)
+                sleep(1)
+                hello(2)
+                self.handle_action(FolieTechniqueAction.RESET)
+            
+            def base_dance(sleep_time=0.5):
+                send_data_through_UART(90, 0)
+                sleep(sleep_time)
+                send_data_through_UART(90, 1)
+                sleep(sleep_time)
+                send_data_through_UART(0, 0)
+                sleep(sleep_time)
+                send_data_through_UART(0, 1)
+                sleep(sleep_time)
+            
+            def base_dance_2(sleep_time=0.5):
+                send_data_through_UART(90, 0)
+                sleep(sleep_time)
+                send_data_through_UART(90, 1)
+                sleep(sleep_time)
+                send_data_through_UART(180, 0)
+                sleep(sleep_time)
+                send_data_through_UART(180, 1)
+                sleep(sleep_time)
+                send_data_through_UART(90, 0)
+                sleep(sleep_time)
+                send_data_through_UART(90, 1)
+                sleep(sleep_time)
+                send_data_through_UART(0, 0)
+                sleep(sleep_time)
+                send_data_through_UART(0, 1)
+                sleep(sleep_time)
+
+            hello_dance()
+            sleep(1)
+            self.handle_action(FolieTechniqueAction.POINT_EVERYONE) # Invite everyone to the dance
+            sleep(1)
+            base_dance()
+            for i in range(2):
+                base_dance(0.3)
+            base_dance_2()
+            for i in range(2):
+                base_dance_2(0.3)
+            self.handle_action(FolieTechniqueAction.HI)
+            sleep(1)
+
         elif action == FolieTechniqueAction.FIND_PERSONS:
             detector.object_detection(0, 60, opt)
             pass
+
         elif action == FolieTechniqueAction.POINT_PERSON:
             detector.object_detection(0, 60, opt)
             # if need to show specific element to cv
             # vision_queue.put({"label": label_value, "coordinate_dict": coordinate_dict})
-            pass
+            PERSON_ANGLE_HORIZONTAL = 80
+            PERSON_ANGLE_VERTICAL = 90
+            send_data_through_UART(PERSON_ANGLE_VERTICAL, 1)
+            sleep(0.5)
+            send_data_through_UART(PERSON_ANGLE_HORIZONTAL, 0)
+            sleep(0.5)
+        
+        elif action == FolieTechniqueAction.POINT_EVERYONE:
+            send_data_through_UART(90, 0)
+            sleep(0.5)
+            send_data_through_UART(90, 1)
+            sleep(0.5)
+            for i in range(2):
+                send_data_through_UART(0, 0)
+                sleep(0.5)
+                send_data_through_UART(270, 0)
+                sleep(0.5)
+                send_data_through_UART(0, 0)
+                sleep(0.5)
+                send_data_through_UART(90, 0)
+                sleep(0.5)
+            self.handle_action(FolieTechniqueAction.RESET)
+        elif action == FolieTechniqueAction.RESET:
+            send_data_through_UART(0, 0)
+            sleep(2)
+            send_data_through_UART(0, 1)
+            sleep(2)
         else:
             pass
     def get_command_from_text(self, raw_text):
@@ -86,6 +188,7 @@ class FolieTechnique:
         sleep(2)
         text_queue.put("Start Listening")
     
+<<<<<<< HEAD
     def vision_thread(self, vision_queue, opt):
         DetectorViewer(vision_queue).run_computer_vision(opt)
 
@@ -97,6 +200,12 @@ class FolieTechnique:
             print("Detected sound above threshold:", volume_norm)
 
 
+=======
+    def vision_thread(self, detector: DetectorViewer, opt):
+        detector.run_computer_vision(opt)
+    
+    
+>>>>>>> origin/feature/folie-technique-app-movement
     def run_folie_app(self, opt):
         # open script window
         text_queue = multiprocessing.Queue()
