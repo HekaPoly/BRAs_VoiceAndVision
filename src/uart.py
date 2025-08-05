@@ -45,7 +45,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     Returns:
         dataSuccessfullySent (bool): Result of data transmission (Successful or Unsuccessful).
     """
-    angle =  int((2.15*int(angle)+360) % 360 )
+    angle = int(angle % 360)
     assert(angle >= 0 and angle <= 360)
     serial_ports = get_serial_ports_list()
     if len(serial_ports) != 1:
@@ -53,7 +53,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     
     serial_port = serial_ports[0]
 
-    VELOCITY = 75
+    VELOCITY = 80
     VELOCITY <<= VELOCITY_SHIFT
 
     angle <<= ANGLE_SHIFT
@@ -83,6 +83,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
         sleep(UART_INIT_DELAY)
         
         ser.write(byte_data)
+        ser.flush()
         data_successfully_sent = True
     except Exception as e:
         print(e)
