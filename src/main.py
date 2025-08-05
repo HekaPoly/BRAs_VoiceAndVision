@@ -10,7 +10,8 @@ import math
 import faulthandler
 import uart
 from enum import Enum
-import interactive_window
+from folie_technique import FolieTechnique
+import multiprocessing
 
 faulthandler.enable()
 
@@ -32,11 +33,6 @@ def find_angle(coordinated_target_list:np.ndarray, mode: Mode = Mode.FIX_THRESHO
     return angle_deg
 
 def main():
-    text = speech_to_text.transcribe_directly()
-    print(text)
-    label = utils.string_to_label(text)
-    print(label)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='../models/yolov8n.pt', help='model.pt path(s)')
     parser.add_argument('--svo', type=str, default=None, help='optional svo file')
@@ -45,15 +41,8 @@ def main():
     opt = parser.parse_args()
 
     with torch.no_grad():
-        coordinate_dict = detector.object_detection(label, 25, opt)
-        if label not in coordinate_dict:
-            raise ValueError(f"Label {label} not found in coordinate dictionary.")
-        else:
-            angle = find_angle(coordinate_dict.get(label, np.empty((0, 3))))
-            print("angle :", angle)
-
-    # Pas sure ou mettre la fonction pour maintenant
-    interactive_window.Windows.start_infinite_cam(label, opt)
+        FolieTechnique().run_folie_app(opt)
 
 if __name__ == '__main__':
     main()
+

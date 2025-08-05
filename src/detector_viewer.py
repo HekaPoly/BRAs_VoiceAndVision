@@ -18,18 +18,43 @@ import ogl_viewer.viewer as gl
 import cv_viewer.tracking_viewer as cv_viewer
 import cv_viewer.labels as lab
 import history as rd
-from utils import string_to_label 
+from utils import string_to_label
+import detector
 
 lock = Lock()
 run_signal = False
 exit_signal = False
+
+def torch_thread(weights, img_size, conf_thres=0.2, iou_thres=0.45):
+    global image_net, exit_signal, run_signal, detections
+
+    print("Intializing Network...")
+
+    yolo = YOLO(weights)
+    yolo.model.to('cuda')
+    yolo.model.eval()
+
+    while not exit_signal:
+        if run_signal:
+            lock.acquire()
+
+            img = cv2.cvtColor(image_net, cv2.COLOR_BGRA2RGB)
+            # https://docs.ultralytics.com/modes/predict/#video-suffixes
+            det = yolo.predict(img, save=False, imgsz=img_size, conf=conf_thres,
+                               iou=iou_thres)[0].cpu().numpy().boxes
+
+            # ZED CustomBox format (with inverse letterboxing tf applied)
+            detections = detections_to_custom_box(det, image_net)
+            lock.release()
+            run_signal = False
+        time.sleep(0.01)
 
 class DetectorViewer:
     def __init__(self, queue):
         self.queue = queue
         self.label = -1
         self.coordinate_dict = {}
-        
+  
     def check_queue(self):
         """Checks the queue to receive update"""
         while not self.queue.empty():
@@ -41,7 +66,7 @@ class DetectorViewer:
     def run_computer_vision(self, opt, max_distance: float = 7.0):
         global image_net, exit_signal, run_signal, detections
 
-        capture_thread = Thread(target=torch_thread, kwargs={'weights': opt.weights,
+        capture_thread = Thread(target=detector.torch_thread, kwargs={'weights': opt.weights,
                                                             'img_size': opt.img_size,
                                                             "conf_thres": opt.conf_thres})
         capture_thread.start()
