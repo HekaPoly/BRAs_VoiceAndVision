@@ -1,15 +1,20 @@
 import enum
 import multiprocessing
+from detector_viewer import DetectorViewer
 import sounddevice as sd
 from time import sleep
 import detector
 import speech_to_text
 import threading
 import time
+import numpy as np
+
 
 from text_viewer import run_text_window
 from uart import send_data_through_UART
 import random
+
+VOLUME_THRESHOLD = 0.2
 
 class FolieTechniqueAction(enum.Enum):
     HI = "Salut! :D",
@@ -33,7 +38,6 @@ class FolieTechnique:
         send_data_through_UART(60, 0)
         sleep(1)
         self.hello(2)
-        self.handle_action(FolieTechniqueAction.RESET)
     
     def base_dance(self, sleep_time=0.5):
         send_data_through_UART(90, 0)
@@ -103,19 +107,15 @@ class FolieTechnique:
             detector.object_detection(0, 60, opt)
             # if need to show specific element to cv
             # vision_queue.put({"label": label_value, "coordinate_dict": coordinate_dict})
-            PERSON_ANGLE_HORIZONTAL = 80
-            PERSON_ANGLE_VERTICAL = 90
-            send_data_through_UART(PERSON_ANGLE_VERTICAL, 1)
-            sleep(0.5)
-            send_data_through_UART(PERSON_ANGLE_HORIZONTAL, 0)
-            sleep(0.5)
-
-        elif action == FolieTechniqueAction.RESET:
-            send_data_through_UART(30, 0)
-            send_data_through_UART(0, 1)
-
+            # PERSON_ANGLE_HORIZONTAL = 80
+            # PERSON_ANGLE_VERTICAL = 90
+            # send_data_through_UART(PERSON_ANGLE_VERTICAL, 1)
+            # sleep(0.5)
+            # send_data_through_UART(PERSON_ANGLE_HORIZONTAL, 0)
+            # sleep(0.5)
         else:
-            pass
+            print("No action matched.")
+        
     def get_command_from_text(self, raw_text):
         lower_text = raw_text.lower()
         
@@ -138,13 +138,6 @@ class FolieTechnique:
             return FolieTechniqueAction.POINT_PERSON
         else:
             return None
-
-    def run_command(self, command: str, vision_queue):
-        action: FolieTechniqueAction = self.find_action(command)
-        self.handle_action(action)
-        
-        sleep(3)
-        pass
     
     def run_reset(self):
         send_data_through_UART(30, 0)
@@ -153,17 +146,25 @@ class FolieTechnique:
     def vision_thread(self, vision_queue, opt):
         DetectorViewer(vision_queue).run_computer_vision(opt)
 
-    def audio_callback(input_data, frames, time, status):
-        if status:
-            print(status)
-        volume_norm = np.linalg.norm(input_data) * 10
-        if volume_norm > self.threshold:
-            print("Detected sound above threshold:", volume_norm)
-            self.hasStarted = True
+    def run_sound_detection(self):
+        has_detect = False
 
+        stream = sd.InputStream(channels=1, samplerate=44100, blocksize=1024)
+        stream.start()
+
+        while not has_detect:
+            data, _ = stream.read(1024)
+            volume = np.linalg.norm(data)
+            if volume > VOLUME_THRESHOLD:
+                print("Audio detected, starting Folie Technique...")       
+                has_detect = True
+            sleep(0.1)
+
+        stream.stop()
+        stream.close()
+        
 
     def run_folie_app(self, opt):
-        # open script window
         self.run_reset()
         sleep(2)
 
@@ -172,25 +173,25 @@ class FolieTechnique:
         text_process.start()
         
         text_queue.put("Dit BIRA!")
-        sleep(2)
-
-        # if detect sound
+        self.run_sound_detection()
+        
+        
+        text_queue.put({"text": "Prépare toi!", "countdown": 2})
         text_queue.put({"text": "Dit ta commande!", "countdown": 10})
-        text = speech_to_text.transcribe_for(10)
-
+        text = speech_to_text.transcribe_for(12)
         command = self.get_command_from_text(text)
+        
+        
         while(command is None):
             text_queue.put({"text": "Jai mal compris,\npeux-tu repeter ta commande. :)", "countdown": 10})
             text = speech_to_text.transcribe_for(10)
-
             command = self.get_command_from_text(text)
 
-        text_queue.put({"text": command.value, "countdown": 3})
 
+        text_queue.put({"text": command.value, "countdown": 3})
         sleep(3)
         text_process.terminate()
 
-        
         self.handle_action(command, opt)
 
         print("Done action, resetting...")
