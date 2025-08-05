@@ -8,7 +8,7 @@ from serial.tools import list_ports
 from time import sleep
 
 DEFAULT_BAUD_RATE = 115200
-VELOCITY_SHIFT = 0
+VELOCITY_SHIFT = 3
 ANGLE_SHIFT = 16
 NUMBER_OF_BYTES = 4
 UART_INIT_DELAY = 2
@@ -35,7 +35,7 @@ def get_serial_ports_list() -> list:
 
     return list_com_ports
 
-def send_data_through_UART(angle: int) -> bool:
+def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     """
     This function takes angle as input to send it to a microcontroller through UART;
 
@@ -59,6 +59,7 @@ def send_data_through_UART(angle: int) -> bool:
     angle <<= ANGLE_SHIFT
     data_successfully_sent = False
     data = 0x00000000
+    data += motorId
     data += angle
     data += VELOCITY
 
