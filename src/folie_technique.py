@@ -5,9 +5,14 @@ from detector_viewer import DetectorViewer
 import speech_to_text
 import threading
 import time
+import sounddevice as sd
+import numpy as np
+
 
 from text_viewer import run_text_window
 from uart import send_data_through_UART
+
+VOLUME_THRESHOLD = 0.2
 
 class FolieTechniqueAction(enum.Enum):
     HI = 0,
@@ -65,7 +70,22 @@ class FolieTechnique:
     def vision_thread(self, detector: DetectorViewer, opt):
         detector.run_computer_vision(opt)
         
-    
+    def run_sound_detection(self, text_queue):
+        has_detect = False
+
+        stream = sd.InputStream(channels=1, samplerate=44100, blocksize=1024)
+        stream.start()
+
+        while not has_detect:
+            data, _ = stream.read(1024)
+            volume = np.linalg.norm(data)
+            if volume > VOLUME_THRESHOLD:
+                print("Audio detected, starting Folie Technique...")       
+                sound_detection = True
+            sleep(0.1)
+
+        stream.stop()
+        stream.close()
     
     def run_folie_app(self, opt):
         # open script window
