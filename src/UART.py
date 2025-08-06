@@ -45,7 +45,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     Returns:
         dataSuccessfullySent (bool): Result of data transmission (Successful or Unsuccessful).
     """
-    angle =  int(int(int(angle) % 360) / 0.225) #int((2.15*int(angle)+360) % 360 )
+    angle =  int(int(int(angle) % 360)) #int((2.15*int(angle)+360) % 360 )
     assert(angle >= 0 and angle <= 360)
     serial_ports = get_serial_ports_list()
     if len(serial_ports) != 1:
