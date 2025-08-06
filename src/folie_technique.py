@@ -8,13 +8,14 @@ import speech_to_text
 import threading
 import time
 import numpy as np
+import pyaudio
 
 
 from text_viewer import run_text_window
 from uart import send_data_through_UART
 import random
 
-VOLUME_THRESHOLD = 0.2
+VOLUME_THRESHOLD = 0.05
 
 class FolieTechniqueAction(enum.Enum):
     HI = "Salut! :D",
@@ -149,18 +150,32 @@ class FolieTechnique:
     def run_sound_detection(self):
         has_detect = False
 
-        stream = sd.InputStream(channels=1, samplerate=44100, blocksize=1024)
-        stream.start()
+        # stream = sd.InputStream(device='Microphone - JOUNIVO JV601', channels=1, samplerate=44100, blocksize=1024)
+        sample_rate = 16000
+        bits_per_sample = 16
+        chunk_size = 1024
+        audio_format = pyaudio.paInt16
+        channels = 1
+
+        audio = pyaudio.PyAudio()
+
+        stream = audio.open(format=audio_format,
+                        channels=channels,
+                        rate=sample_rate,
+                        input=True,
+                        frames_per_buffer=chunk_size)
 
         while not has_detect:
-            data, _ = stream.read(1024)
-            volume = np.linalg.norm(data)
+            data = stream.read(chunk_size, exception_on_overflow=False)
+            audio_data = np.frombuffer(data, dtype=np.float32)
+            volume = np.linalg.norm(audio_data)
+            print(volume)
             if volume > VOLUME_THRESHOLD:
                 print("Audio detected, starting Folie Technique...")       
                 has_detect = True
             sleep(0.1)
 
-        stream.stop()
+        stream.stop_stream()
         stream.close()
         
 
