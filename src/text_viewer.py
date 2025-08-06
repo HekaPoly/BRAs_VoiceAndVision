@@ -7,17 +7,18 @@ class TextViewer:
         self.queue = queue
         self.dialogue_window = tk.Tk()
         self.dialogue_window.title("Dialogue Box")
+        self.dialogue_window.attributes("-fullscreen", True)
+        self.dialogue_window.bind("<Escape>", lambda e: self.dialogue_window.attributes("-fullscreen", False))
 
-        self.label = tk.Label(self.dialogue_window, text="Start Listening", font=("Helvetica", 16), height=20, width=60)
-        self.label.pack(padx=10, pady=5)
-        self.countdown = tk.Label(self.dialogue_window, text="", font=("Helvetica", 16), height=20, width=60)
-        self.countdown.pack(padx=10)
+        self.label = tk.Label(self.dialogue_window, text="Title", font=("Helvetica", 48), justify="center", wraplength=1300)
+        self.label.pack(expand=True, fill="both", padx=10, pady=10)
+        
+        self.countdown = tk.Label(self.dialogue_window, text="Sub title", font=("Helvetica", 32), justify="center", wraplength=1300)
+        self.countdown.pack(expand=True, fill="both", padx=10, pady=10)
 
-        tk.Button(self.dialogue_window, text="Clear", command=self.clear).pack(side="left", padx=10)
+        tk.Button(self.dialogue_window, text="close", command=self.close).pack(side="left", padx=10)
         self.dialogue_window.protocol("WM_DELETE_WINDOW", self.close)
-
-        # tk.Button(self.dialogue_window,text="Start Listening",command=self.open_dialogue_window).pack(side="bottom", pady=10)
-
+        
     def open(self):
         try:
             self.dialogue_window.after(100, self.check_queue)
