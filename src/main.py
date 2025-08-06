@@ -54,12 +54,17 @@ def main():
     UART.send_data_through_UART(angles[1], 1)
 
 if __name__ == '__main__':
-    UART.send_data_through_UART(0, 0)
-    input()
-    UART.send_data_through_UART(30, 0)
-    input()
-    UART.send_data_through_UART(180, 2)
-    input()
-    UART.send_data_through_UART(0, 3)
+    # UART.send_data_through_UART(0, 0)
+    # UART.send_data_through_UART(0, 1)
+    # input()
+    # UART.send_data_through_UART(1, 1)
+    # input()
+    # UART.send_data_through_UART(2, 1)
+    # input()
 
+    while True:
+        a = input("Enter angle: ")
+        b = input("Enter motor ID: ")
+        UART.send_data_through_UART(int(a), int(b))
+        print("Data sent successfully.\n\n")
 
