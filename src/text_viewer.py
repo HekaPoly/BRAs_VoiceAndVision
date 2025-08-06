@@ -18,7 +18,7 @@ class TextViewer:
 
         tk.Button(self.dialogue_window, text="close", command=self.close).pack(side="left", padx=10)
         self.dialogue_window.protocol("WM_DELETE_WINDOW", self.close)
-        
+
     def open(self):
         try:
             self.dialogue_window.after(100, self.check_queue)
@@ -41,6 +41,7 @@ class TextViewer:
     def update_text(self, inputs: str):
         if self.label:
             self.label.config(text=inputs)
+            self.countdown.config(text="")
 
     def start_countdown(self, countdown: int):
         if self.countdown:
@@ -63,6 +64,8 @@ class TextViewer:
                     self.update_text(message["text"])
                 if "countdown" in message:
                     self.start_countdown(countdown=message["countdown"])
+                if "subtitle" in message:
+                    self.countdown.config(text=message["subtitle"])
             else:
                 print("[DEBUG] Received unknown message type:", type(message))
         self.dialogue_window.after(100, self.check_queue)

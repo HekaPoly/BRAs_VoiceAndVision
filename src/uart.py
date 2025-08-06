@@ -35,7 +35,7 @@ def get_serial_ports_list() -> list:
 
     return list_com_ports
 
-def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
+def send_data_through_UART(angle: int, motorId: int = 0, velocity:int = 75) -> bool:
     """
     This function takes angle as input to send it to a microcontroller through UART;
 
@@ -53,7 +53,7 @@ def send_data_through_UART(angle: int, motorId: int = 0) -> bool:
     
     serial_port = serial_ports[0]
 
-    VELOCITY = 80
+    VELOCITY = velocity
     VELOCITY <<= VELOCITY_SHIFT
 
     angle <<= ANGLE_SHIFT

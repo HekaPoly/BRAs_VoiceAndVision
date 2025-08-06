@@ -9,13 +9,13 @@ import threading
 import time
 import numpy as np
 import pyaudio
+import random
 
-
-from text_viewer import run_text_window
+from text_viewer import TextViewer
 from uart import send_data_through_UART
 import random
 
-VOLUME_THRESHOLD = 0.05
+VOLUME_THRESHOLD = 0.1
 
 class FolieTechniqueAction(enum.Enum):
     HI = "Salut! :D",
@@ -28,10 +28,6 @@ class FolieTechniqueAction(enum.Enum):
     RESET = "Reset BIRA"
 
 class FolieTechnique:
-    def __init__(self):
-        self.threshold = 0.02
-        self.hasStarted = False
-        
     def hello_dance(self,):
         send_data_through_UART(300, 0)
         sleep(1)
@@ -40,7 +36,7 @@ class FolieTechnique:
         sleep(1)
         self.hello(2)
     
-    def base_dance(self, sleep_time=0.5):
+    def base_dance(self, sleep_time=3):
         send_data_through_UART(90, 0)
         sleep(sleep_time)
         send_data_through_UART(90, 1)
@@ -50,7 +46,7 @@ class FolieTechnique:
         send_data_through_UART(0, 1)
         sleep(sleep_time)
     
-    def base_dance_2(self, sleep_time=0.5):
+    def base_dance_2(self, sleep_time=5):
         send_data_through_UART(90, 0)
         sleep(sleep_time)
         send_data_through_UART(90, 1)
@@ -68,44 +64,58 @@ class FolieTechnique:
         send_data_through_UART(0, 1)
         sleep(sleep_time)
 
-    def hello(self, repetitions=3):
-        send_data_through_UART(180, 1)
-        sleep(5)
-        for _ in range(repetitions):
-            send_data_through_UART(185, 1)
-            sleep(3)
-            send_data_through_UART(175, 1)
-            sleep(3)
-            
+    def hello(self, repetitions=3, timeout=4, is_3ddl=False):
+        self.text_queue.put("Je tourne la premiere membrure.")
+        send_data_through_UART(150, 1)
+        sleep(3)
+        if is_3ddl:
+            self.text_queue.put("Je tourne la deuxieme membrure.")
+            send_data_through_UART(70, 2, 10)
+            sleep(2)
+            for _ in range(repetitions):
+                self.text_queue.put("Salut! :D")
+                send_data_through_UART(75, 2, 5)
+                sleep(1)
+                send_data_through_UART(55, 2, 5)
+                sleep(1)
+        else:
+            for _ in range(repetitions):
+                send_data_through_UART(165, 1)
+                sleep(timeout)
+                send_data_through_UART(135, 1)
+                sleep(timeout)
+        
     def handle_action(self, action: FolieTechniqueAction, opt):
         if action == FolieTechniqueAction.HI:
-            self.hello(3)
+            self.hello(is_3ddl=True)
         elif action == FolieTechniqueAction.LEFT:
+            self.text_queue.put("Je tourne la base.")
             send_data_through_UART(0, 0)
-            sleep(2)
         elif action == FolieTechniqueAction.RIGHT:
-            send_data_through_UART(75, 0)
-            sleep(2)
+            self.text_queue.put("Je tourne la base.")
+            send_data_through_UART(170, 0)
         elif action == FolieTechniqueAction.UP:
-            send_data_through_UART(180, 1)
-            sleep(2)
+            self.text_queue.put("Je tourne la premiere membrure.")
+            send_data_through_UART(150, 1)
+            sleep(5)
+            self.text_queue.put("Je tourne la deuxieme membrure.")
+            send_data_through_UART(70, 2, 5)
+            sleep(1)
         elif action == FolieTechniqueAction.DANCE:
-            self.hello_dance()
-            sleep(1)
-            self.base_dance()
-            for i in range(2):
-                self.base_dance(0.3)
-            self.base_dance_2()
-            for i in range(2):
-                self.base_dance_2(0.3)
-            sleep(1)
+            i = random.randint(0, 2)
+            if i == 0:
+                self.base_dance()
+            elif i == 1:
+                self.base_dance_2()
+            elif i == 2:
+                self.hello_dance()
 
         elif action == FolieTechniqueAction.FIND_PERSONS:
+            self.text_queue.put("Jouvre mes yeux...")
             detector.object_detection(0, 60, opt)
-            pass
 
-        elif action == FolieTechniqueAction.POINT_PERSON:
-            detector.object_detection(0, 60, opt)
+        #elif action == FolieTechniqueAction.POINT_PERSON:
+            # detector.object_detection(0, 60, opt)
             # if need to show specific element to cv
             # vision_queue.put({"label": label_value, "coordinate_dict": coordinate_dict})
             # PERSON_ANGLE_HORIZONTAL = 80
@@ -117,12 +127,14 @@ class FolieTechnique:
         else:
             print("No action matched.")
         
+        sleep(5)
+
+        
     def get_command_from_text(self, raw_text):
         lower_text = raw_text.lower()
         
         if any(word in lower_text for word in ["bonjour", "hi", "hello", "salu", "allo"]):
             return FolieTechniqueAction.HI
-            pass
         elif any(word in lower_text for word in ["gauche", "left"]):
             return FolieTechniqueAction.LEFT
         elif any(word in lower_text for word in ["droit", "right"]):
@@ -132,25 +144,25 @@ class FolieTechnique:
         elif any(word in lower_text for word in ["danse", "dance"]):
             return FolieTechniqueAction.DANCE
         elif sum(1 for word in ["trouve", "find", "person", "people"] if word in lower_text) >= 2:
-            # if need to show specific element to cv
-            # vision_queue.put({"label": label_value, "coordinate_dict": coordinate_dict})
             return FolieTechniqueAction.FIND_PERSONS
-        elif sum(1 for word in ["montre", "point", "person", "people"] if word in lower_text) >= 2:
-            return FolieTechniqueAction.POINT_PERSON
+        #elif sum(1 for word in ["montre", "point", "person", "people"] if word in lower_text) >= 2:
+        #    return FolieTechniqueAction.POINT_PERSON
         else:
             return None
     
     def run_reset(self):
-        send_data_through_UART(30, 0)
+        self.text_queue.put({"subtitle": "Je me remets en position de base (base)."})
+        send_data_through_UART(80, 0)
+        sleep(3)
+        self.text_queue.put({"subtitle": "Je me remets en position de base (2e membrure)."})
+        send_data_through_UART(0, 2, 5)
+        sleep(3)
+        self.text_queue.put({"subtitle": "Je me remets en position de base (1er membrure)."})
         send_data_through_UART(0, 1)
+        sleep(3)
     
-    def vision_thread(self, vision_queue, opt):
-        DetectorViewer(vision_queue).run_computer_vision(opt)
-
     def run_sound_detection(self):
         has_detect = False
-
-        # stream = sd.InputStream(device='Microphone - JOUNIVO JV601', channels=1, samplerate=44100, blocksize=1024)
         sample_rate = 16000
         bits_per_sample = 16
         chunk_size = 1024
@@ -158,7 +170,6 @@ class FolieTechnique:
         channels = 1
 
         audio = pyaudio.PyAudio()
-
         stream = audio.open(format=audio_format,
                         channels=channels,
                         rate=sample_rate,
@@ -177,40 +188,62 @@ class FolieTechnique:
 
         stream.stop_stream()
         stream.close()
+
+    def run_text_window(self, queue: multiprocessing.Queue):
+        app = TextViewer(queue)
+        app.open()
         
 
     def run_folie_app(self, opt):
-        self.run_reset()
-        sleep(2)
-
-        text_queue = multiprocessing.Queue()
-        text_process = multiprocessing.Process(target=run_text_window, args=(text_queue,))
+        print("Starting Folie Technique...")
+        self.text_queue = multiprocessing.Queue()
+        text_process = multiprocessing.Process(target=self.run_text_window, args=(self.text_queue,))
         text_process.start()
-        
-        text_queue.put("Dit BIRA!")
+
+        self.text_queue.put("Je suis BIRA, le bras robotique de HEKA.")
+        self.run_reset()
+
+        self.text_queue.put("Dit BIRA!")
         self.run_sound_detection()
         
         
-        text_queue.put({"text": "Prépare toi!", "countdown": 2})
-        text_queue.put({"text": "Dit ta commande!", "countdown": 10})
-        text = speech_to_text.transcribe_for(12)
+        self.text_queue.put({"text": "Prépare toi!", "countdown": 3})
+        self.text_queue.put({"text": "Dit ta commande!", "countdown": 10})
+        text = speech_to_text.transcribe_for(13)
         command = self.get_command_from_text(text)
         
         
         while(command is None):
-            text_queue.put({"text": "Jai mal compris,\npeux-tu repeter ta commande. :)", "countdown": 10})
+            self.text_queue.put({"text": "Jai mal compris,\npeux-tu repeter ta commande. :)", "countdown": 10})
             text = speech_to_text.transcribe_for(10)
             command = self.get_command_from_text(text)
 
 
-        text_queue.put({"text": command.value, "countdown": 3})
+        self.text_queue.put({"text": command.value, "countdown": 3})
         sleep(3)
-        text_process.terminate()
+        self.text_queue.put("Jai compris ta commande, je vais faire l'action.")
+        if command == FolieTechniqueAction.FIND_PERSONS:
+            text_process.terminate()
+            self.text_queue.close()
+
 
         self.handle_action(command, opt)
 
         print("Done action, resetting...")
-        sleep(5)
+
+        if command == FolieTechniqueAction.FIND_PERSONS:
+            self.text_queue = multiprocessing.Queue()
+            text_process = multiprocessing.Process(target=self.run_text_window, args=(self.text_queue,))
+            text_process.start()
+
+        self.text_queue.put("Jai fini de faire l'action. \n\nA la prochaine! :D")
         self.run_reset()
+        sleep(3)
+        print("End")
+        self.text_queue.close()
+        text_process.terminate()
+        
+
+
                         
                 

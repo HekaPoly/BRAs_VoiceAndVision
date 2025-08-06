@@ -38,11 +38,29 @@ def main():
     parser.add_argument('--svo', type=str, default=None, help='optional svo file')
     parser.add_argument('--img_size', type=int, default=416, help='inference size (pixels)')
     parser.add_argument('--conf_thres', type=float, default=0.4, help='object confidence threshold')
+    parser.add_argument('--mode', type=str, default="", help='')
     opt = parser.parse_args()
 
-    with torch.no_grad():
-        FolieTechnique().run_folie_app(opt)
+    if opt.mode == "folie":
+        with torch.no_grad():
+                FolieTechnique().run_folie_app(opt)
+    else:
+        while True:
+            try:
+                a = input("Enter angle: ")
+                b = input("Enter motor ID: ")
+                if input("Do you want to enter velocity? (y/N): ").strip().lower() == 'y':
+                    c = input("Enter velocity %: ")
+                else:
+                    c = 80
+                uart.send_data_through_UART(int(a), int(b), int(c))
+                print("Data sent successfully.\n")
+            except ValueError:
+                print("Invalid input. Please enter numeric values.\n\n")
 
 if __name__ == '__main__':
     main()
+
+       
+
 
